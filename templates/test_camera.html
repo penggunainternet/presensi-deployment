@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test Camera</title>
+    <style>
+      body {
+        font-family: Arial;
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 20px;
+      }
+      #video {
+        width: 100%;
+        max-width: 400px;
+        border: 2px solid black;
+        margin: 20px 0;
+      }
+      button {
+        padding: 10px 20px;
+        margin: 10px 0;
+        cursor: pointer;
+      }
+      #log {
+        background: #f0f0f0;
+        padding: 10px;
+        margin-top: 20px;
+        height: 200px;
+        overflow-y: auto;
+        border: 1px solid #ccc;
+      }
+      .log-entry {
+        padding: 5px;
+        border-bottom: 1px solid #ddd;
+        font-family: monospace;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Camera Test</h1>
+
+    <video id="video" autoplay playsinline muted></video>
+
+    <div>
+      <button onclick="startCamera()">Start Camera</button>
+      <button onclick="stopCamera()">Stop Camera</button>
+      <button onclick="capturePhoto()">Capture Photo</button>
+    </div>
+
+    <canvas
+      id="canvas"
+      width="400"
+      height="300"
+      style="border: 2px solid red; margin-top: 20px"
+    ></canvas>
+
+    <div id="log"></div>
+
+    <script>
+      let video = document.getElementById("video");
+      let logDiv = document.getElementById("log");
+      let stream = null;
+
+      function log(msg) {
+        console.log(msg);
+        let entry = document.createElement("div");
+        entry.className = "log-entry";
+        entry.textContent = new Date().toLocaleTimeString() + " - " + msg;
+        logDiv.appendChild(entry);
+        logDiv.scrollTop = logDiv.scrollHeight;
+      }
+
+      function startCamera() {
+        log("Requesting camera...");
+        navigator.mediaDevices
+          .getUserMedia({
+            video: { width: 400, height: 300 },
+            audio: false,
+          })
+          .then((s) => {
+            log("Camera stream obtained!");
+            stream = s;
+            video.srcObject = stream;
+            video.play();
+            log("Video playing...");
+          })
+          .catch((err) => {
+            log("ERROR: " + err.name + " - " + err.message);
+          });
+      }
+
+      function stopCamera() {
+        log("Stopping camera...");
+        if (stream) {
+          stream.getTracks().forEach((track) => track.stop());
+          log("Camera stopped");
+        }
+      }
+
+      function capturePhoto() {
+        let canvas = document.getElementById("canvas");
+        let ctx = canvas.getContext("2d");
+        ctx.drawImage(video, 0, 0, 400, 300);
+        log("Photo captured!");
+      }
+
+      // Auto start on load
+      window.onload = function () {
+        log("Page loaded. Ready to test.");
+        startCamera();
+      };
+    </script>
+  </body>
+</html>

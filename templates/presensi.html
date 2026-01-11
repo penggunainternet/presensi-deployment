@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Presensi Wajah</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+    />
+    <style>
+      body {
+        background: #fff;
+        min-height: 100vh;
+        padding: 20px 0;
+        font-family: "Segoe UI";
+      }
+      .navbar-custom {
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .navbar-brand {
+        font-weight: 700;
+        font-size: 20px;
+        color: #0066cc !important;
+      }
+      .container-main {
+        max-width: 900px;
+        margin: 30px auto;
+        padding: 0 20px;
+      }
+      .page-title {
+        color: #0066cc;
+        text-align: center;
+        margin-bottom: 40px;
+        font-weight: 700;
+      }
+      .page-title h1 {
+        font-size: 36px;
+        margin-bottom: 10px;
+      }
+      .card-section {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        margin-bottom: 30px;
+        overflow: hidden;
+      }
+      .card-header-custom {
+        background: #0066cc;
+        color: white;
+        padding: 20px;
+        font-weight: 600;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .card-body-custom {
+        padding: 30px;
+      }
+      .video-container {
+        position: relative;
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto 20px;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+      }
+      #video {
+        width: 100%;
+        display: block;
+        background: #000;
+      }
+      #canvas {
+        display: none;
+      }
+      .btn-capture {
+        background: #00aa66;
+        border: none;
+        border-radius: 10px;
+        padding: 14px 30px;
+        font-weight: 600;
+        color: white;
+        transition: all 0.3s;
+      }
+      .btn-capture:hover {
+        transform: translateY(-2px);
+        background: #008a52;
+        box-shadow: 0 8px 25px rgba(0, 170, 102, 0.4);
+        color: white;
+      }
+      .btn-capture:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .alert-result {
+        margin-top: 25px;
+        border-radius: 10px;
+        border: none;
+        display: none;
+      }
+      .alert-result.show {
+        display: block;
+        animation: slideDown 0.3s;
+      }
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .btn-admin {
+        background: #0066cc;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-size: 14px;
+      }
+      .btn-admin:hover {
+        background: #0052a3;
+      }
+      .btn-admin a {
+        color: white;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-light navbar-custom sticky-top">
+      <div class="container-fluid">
+        <span class="navbar-brand"
+          ><i class="bi bi-camera-video"></i> Sistem Presensi Wajah</span
+        >
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <div class="ms-auto d-flex gap-2 align-items-center">
+            <div style="display: flex; gap: 10px; align-items: center">
+              <label
+                style="
+                  margin: 0;
+                  font-weight: 600;
+                  color: #333;
+                  font-size: 14px;
+                "
+                >Model:</label
+              >
+              <select
+                id="modelSelect"
+                style="
+                  padding: 6px 12px;
+                  border: 1px solid #ddd;
+                  border-radius: 6px;
+                  font-size: 14px;
+                "
+              >
+                <option value="deepface">DeepFace</option>
+                <option value="tflite_fp16">TFLite FP16 (Very Fast)</option>
+              </select>
+            </div>
+            <div class="btn-admin">
+              <a href="/admin"><i class="bi bi-lock"></i> Admin</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container-main">
+      <div class="page-title">
+        <h1><i class="bi bi-person-check-fill"></i> Presensi Wajah</h1>
+        <p>Arahkan wajah ke kamera untuk presensi</p>
+      </div>
+
+      <div class="card-section">
+        <div class="card-header-custom">
+          <i class="bi bi-camera-fill"></i> Presensi dengan Kamera
+        </div>
+        <div class="card-body-custom">
+          <p class="text-muted mb-4">
+            Arahkan wajah ke kamera. Pastikan pencahayaan cukup dan wajah
+            terlihat jelas.
+          </p>
+
+          <div class="video-container">
+            <video id="video" autoplay playsinline muted></video>
+          </div>
+
+          <div class="text-center mb-3">
+            <button id="captureBtn" class="btn btn-capture" type="button">
+              <i class="bi bi-camera"></i> Ambil Foto & Presensi
+            </button>
+          </div>
+
+          <canvas id="canvas" width="400" height="300"></canvas>
+          <div id="result-camera" class="alert alert-result"></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      // Helper Functions
+      function showAlert(msg, type) {
+        let el = document.getElementById("result-camera");
+        el.className = `alert alert-${type} alert-result show`;
+        el.innerHTML =
+          type === "success"
+            ? `<i class="bi bi-check-circle-fill"></i> ${msg}`
+            : `<i class="bi bi-exclamation-circle-fill"></i> ${msg}`;
+      }
+
+      function displayBoundingBoxImage(b64) {
+        let container = document.getElementById("result-camera");
+        let img = document.createElement("img");
+        img.src = b64;
+        img.style.cssText =
+          "max-width:100%;margin-top:15px;border-radius:8px;border:2px solid #0066cc";
+        container.appendChild(img);
+      }
+
+      function displayFaceResults(results) {
+        if (!results || !results.length) return;
+        let container = document.getElementById("result-camera");
+        let div = document.createElement("div");
+        div.style.marginTop = "20px";
+        results.forEach((r) => {
+          let card = document.createElement("div");
+          card.style.cssText = `padding:12px;margin-bottom:10px;border-radius:6px;background:${
+            r.status ? "#d4edda" : "#f8d7da"
+          };border:2px solid ${r.status ? "#28a745" : "#f5c6cb"}`;
+          card.innerHTML = `<strong style="color:${
+            r.status ? "#155724" : "#721c24"
+          }">${r.status ? "✓" : "✗"} ${
+            r.name
+          }</strong><br><small style="color:${
+            r.status ? "#155724" : "#721c24"
+          }">Face ${r.face_num} | Score: ${(r.score * 100).toFixed(2)}% | ${
+            r.status ? "Dikenali" : "Tidak Dikenali"
+          }</small>`;
+          div.appendChild(card);
+        });
+        container.appendChild(div);
+      }
+
+      // Main Code
+      let video, captureBtn;
+
+      document.addEventListener("DOMContentLoaded", () => {
+        video = document.getElementById("video");
+        captureBtn = document.getElementById("captureBtn");
+
+        // Request Camera
+        navigator.mediaDevices
+          .getUserMedia({
+            video: { width: { ideal: 400 }, height: { ideal: 300 } },
+            audio: false,
+          })
+          .then((stream) => {
+            video.srcObject = stream;
+            video.play();
+          })
+          .catch((e) => {
+            showAlert("Kamera error: " + e.message, "danger");
+            captureBtn.disabled = true;
+          });
+
+        // Capture Handler
+        captureBtn.addEventListener("click", () => {
+          // Start timer
+          let startTime = Date.now();
+
+          captureBtn.disabled = true;
+          captureBtn.innerHTML =
+            '<span class="spinner-border spinner-border-sm"></span> Memproses...';
+
+          let canvas = document.getElementById("canvas");
+          let ctx = canvas.getContext("2d");
+          ctx.drawImage(video, 0, 0, 400, 300);
+
+          let data = new URLSearchParams();
+          data.append("image_data", canvas.toDataURL("image/jpeg"));
+          data.append(
+            "model_type",
+            document.getElementById("modelSelect").value
+          );
+
+          fetch("/presensi-kamera", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: data,
+          })
+            .then((r) => r.json())
+            .then((d) => {
+              // Calculate elapsed time
+              let endTime = Date.now();
+              let duration = ((endTime - startTime) / 1000).toFixed(2);
+              let message = d.message + ` (Waktu: ${duration}s)`;
+
+              showAlert(message, d.status ? "success" : "danger");
+              if (d.image_with_bbox) displayBoundingBoxImage(d.image_with_bbox);
+              if (d.results?.length) displayFaceResults(d.results);
+            })
+            .catch((e) => showAlert("Error: " + e.message, "danger"))
+            .finally(() => {
+              captureBtn.disabled = false;
+              captureBtn.innerHTML =
+                '<i class="bi bi-camera"></i> Ambil Foto & Presensi';
+            });
+        });
+      });
+    </script>
+  </body>
+</html>
