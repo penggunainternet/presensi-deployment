@@ -8,8 +8,15 @@ import os
 import cv2
 from datetime import datetime
 from config import MODEL_CACHE_DIR
-import tensorflow as tf
 from dotenv import load_dotenv
+
+# Try to import tensorflow for TFLite, but make it optional
+try:
+    import tensorflow as tf
+    TF_AVAILABLE = True
+except ImportError:
+    TF_AVAILABLE = False
+    print("[!] TensorFlow not available, TFLite models will not be loaded")
 
 # Load environment variables dari .env file
 load_dotenv()
@@ -27,6 +34,10 @@ tflite_fp16_available = False
 def load_tflite_fp16_model():
     """Load TFLite FP16 quantized model"""
     global tflite_fp16_interpreter, tflite_fp16_available
+    if not TF_AVAILABLE:
+        print("[!] TensorFlow not available, skipping TFLite model load")
+        tflite_fp16_available = False
+        return
     try:
         tflite_fp16_path = "models/arcface_fp16.tflite"
         if os.path.exists(tflite_fp16_path):
